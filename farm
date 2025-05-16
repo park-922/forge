@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>동물 복지 농장 타이쿤</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f1f8f4;
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+    }
+    h1 {
+      color: #4CAF50;
+      margin-bottom: 10px;
+    }
+    .button {
+      padding: 10px 20px;
+      margin: 10px 5px;
+      background-color: #8BC34A;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .button:hover {
+      background-color: #7CB342;
+    }
+    .stats {
+      margin-top: 10px;
+      font-size: 18px;
+    }
+    .building {
+      border: 2px solid #4CAF50;
+      padding: 15px;
+      margin: 15px auto;
+      border-radius: 8px;
+      background-color: #fff;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 0 8px rgba(76, 175, 80, 0.2);
+      text-align: left;
+      position: relative;
+    }
+    .building strong {
+      font-size: 20px;
+      color: #2e7d32;
+    }
+    .building button {
+      margin-top: 10px;
+      font-size: 14px;
+      padding: 7px 15px;
+      background-color: #66bb6a;
+      border-radius: 6px;
+      border: none;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .building button:hover {
+      background-color: #558b2f;
+    }
+    .pig-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 12px;
+      justify-content: left;
+    }
+    .pig {
+      width: 40px;
+      height: 40px;
+      background-image: url('https://cdn-icons-png.flaticon.com/512/616/616458.png');
+      background-size: cover;
+      border-radius: 6px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      transition: transform 0.2s ease;
+    }
+    .pig:hover {
+      transform: scale(1.2);
+    }
+    #dailyIncome {
+      margin-top: 20px;
+      font-size: 28px;
+      font-weight: 700;
+      color: #2e7d32;
+      min-height: 40px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🐷 동물 복지 농장 타이쿤</h1>
+
+  <div class="stats">
+    💰 자금: <span id="money">1000</span> 원 | 📅 일수: <span id="day">0</span>
+  </div>
+
+  <div class="actions">
+    <button class="button" onclick="buildBarn('케이지 축사', 300, 50)">케이지 축사 짓기 (300원)</button>
+    <button class="button" onclick="buildBarn('동물복지 축사', 500, 30)">동물복지 축사 짓기 (500원)</button>
+    <button class="button" onclick="nextDay()">🌞 하루 보내기</button>
+  </div>
+
+  <div id="dailyIncome">하루 수익: 0 원</div>
+
+  <div class="farm-area" id="farmArea">
+    <h2>🐽 내 농장</h2>
+  </div>
+
+  <script>
+    let money = 1000;
+    let barns = [];
+    let dayCount = 0;
+    const maxDays = 30;
+
+    function buildBarn(type, cost, incomePerPig) {
+      if (barns.length >= 3) {
+        alert('축사는 최대 3개까지만 지을 수 있습니다!');
+        return;
+      }
+      if (money >= cost) {
+        money -= cost;
+        barns.push({ type, pigs: 1, incomePerPig, stress: 0 });
+        updateUI();
+      } else {
+        alert('자금이 부족합니다!');
+      }
+    }
+
+    function buyPig(index) {
+      const barn = barns[index];
+      if (barn.pigs >= 10) {
+        alert('이 축사에는 최대 10마리까지만 키울 수 있어요!');
+        return;
+      }
+      if (money >= 100) {
+        money -= 100;
+        barn.pigs++;
+        updateUI();
+      } else {
+        alert('돼지를 사기에 돈이 부족합니다!');
+      }
+    }
+
+    function nextDay() {
+      if (dayCount >= maxDays) return;
+      dayCount++;
+
+      let totalEarnings = 0;
+      let pigDied = false;
+
+      barns.forEach((barn, i) => {
+        const earnings = barn.incomePerPig * barn.pigs;
+        totalEarnings += earnings;
+
+        if (barn.type === '케이지 축사' && barn.pigs > 0) {
+          barn.stress += 10;
+          if (barn.stress >= 100) {
+            barn.pigs--;
+            barn.stress = 0;
+            pigDied = true;
+            alert(`⚠️ ${i + 1}번 케이지 축사에서 스트레스로 돼지 한 마리가 죽었습니다.`);
+          }
+        }
+      });
+
+      money += totalEarnings;
+      document.getElementById('dailyIncome').textContent = `하루 수익: ${totalEarnings} 원`;
+
+      if (dayCount >= maxDays) {
+        showEnding(pigDied);
+      }
+
+      updateUI();
+    }
+
+    function showEnding(pigDied) {
+      let message = '';
+      if (pigDied) {
+        message = '💰 케이지 축사에서 스트레스로 돼지가 죽었습니다. 우리는 과연 올바른 선택을 했는지 돌아봐야 합니다. 동물 복지를 위해 모두의 관심과 정부의 지원이 필요합니다.';
+      } else {
+        message = '🌿 당신은 수익보다는 동물의 복지를 우선으로 선택했습니다. 동물복지 축사를 통해 돼지들은 더 건강하고 행복하게 자랄 수 있었어요. 이런 선택이 지속되도록 더 많은 관심과 정책적 지원이 필요합니다!';
+      }
+      alert(message);
+      location.reload();
+    }
+
+    function updateUI() {
+      document.getElementById('money').textContent = money;
+      document.getElementById('day').textContent = dayCount;
+      const farmArea = document.getElementById('farmArea');
+      farmArea.innerHTML = '<h2>🐽 내 농장</h2>';
+      barns.forEach((barn, index) => {
+        const div = document.createElement('div');
+        div.className = 'building';
+        const pigs = '<div class="pig-container">' + '<div class="pig"></div>'.repeat(barn.pigs) + '</div>';
+        div.innerHTML = `
+          <strong>${index + 1}. ${barn.type}</strong><br>
+          🐖 돼지 수: ${barn.pigs} / 10<br>
+          💵 돼지당 수익: ${barn.incomePerPig}원<br>
+          ${barn.type === '케이지 축사' ? '스트레스: ' + barn.stress + ' / 100<br>' : ''}
+          <button onclick="buyPig(${index})">+ 돼지 추가 (100원)</button>
+          ${pigs}
+        `;
+        farmArea.appendChild(div);
+      });
+    }
+
+    updateUI();
+  </script>
+</body>
+</html>
